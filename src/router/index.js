@@ -1,27 +1,35 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home.vue'
-
+import login from '../components/login.vue'
+import '../assets/css/globalcss.css'
+import axios from 'axios'
+import home from '../components/home'
+Vue.prototype.$http = axios
+/* 配置请求的路径 */
+axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'
 Vue.use(VueRouter)
 
 const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: Home
-  },
-  {
-    path: '/about',
-    name: 'about',
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
-  }
+  { path: '/', redirect: '/login' },
+  { path: '/login', component: login },
+  { path: '/home', component: home }
 ]
 
 const router = new VueRouter({
   routes
 })
 
+/* 给router挂载路有导航守卫,防止没有token也可以去其他页面 */
+router.beforeEach((to, from, next) => {
+/*  to 将要访问的路径
+  from 代表从哪个路径来的
+  next是一个函数,表示方向 */
+  if (to.path === '/login') {
+    return next()
+  } else {
+    const tokenStr = window.sessionStorage.getItem('token')
+    if (!tokenStr) return next('/login')
+    next()
+  }
+})
 export default router
